@@ -47,7 +47,7 @@ func possibleCutDimensions(materialWidth int, desiredDiameter int, desiredSpacin
 			if cuttableWithoutMargin(materialWidth, diameter, spacing) {
 				newDimensions := CutDimensions{Diameter: diameter, Spacing: spacing}
 				newDimensions.Pieces = (materialWidth - diameter) / (diameter + spacing)
-				if newDimensions.areNice() {
+				if newDimensions.Pieces > 0 && newDimensions.areNice() {
 					result = append(result, newDimensions)
 				}
 			}
@@ -95,14 +95,21 @@ func main() {
 	desiredSpacing := 100
 
 	possibilities := possibleCutDimensions(availableLength, desiredDiameter, desiredSpacing)
-	for _, possibility := range possibilities {
+
+	// printAsCSV(possibilities)
+	// printToGoogleSheets(possibilities)
+	// printOutput(possibilities)
+	bestCut := findBestCut(possibilities, 15, 2, availableLength)
+	fmt.Printf("Best cut: %dmm, %d pieces\n", bestCut.getDistanceBetweenCenters(), bestCut.Pieces)
+
+}
+
+func printOutput(cuts []CutDimensions) {
+	for _, possibility := range cuts {
 
 		fmt.Printf("You can drill %d holes with the folllowing parameters:\n", possibility.Pieces)
 		fmt.Printf("\tDrill ⌀: %dmm\tdistance : %dmm\n", possibility.Diameter, possibility.getDistanceBetweenCenters())
 	}
-	printAsCSV(possibilities)
-	printToGoogleSheets(possibilities)
-
 }
 
 func printAsCSV(cuts []CutDimensions) {
@@ -117,4 +124,26 @@ func printToGoogleSheets(cuts []CutDimensions) {
 	for _, cut := range cuts {
 		fmt.Printf("%d\t%d\t%d\n", cut.Diameter, cut.getDistanceBetweenCenters(), cut.Pieces)
 	}
+}
+
+func findBestCut(cuts []CutDimensions, minLength int, minPieces int, length int) CutDimensions {
+	var bestCut CutDimensions
+	percentage := 0.0
+	for _, cut := range cuts {
+		if cut.Pieces < minPieces {
+			continue
+		}
+		if cut.getDistanceBetweenCenters() < minLength {
+			continue
+		}
+		newPercentage := float64(cut.Pieces*cut.getDistanceBetweenCenters()) / float64(length)
+		fmt.Printf("%d cuts by %dmm (%.1f%%)\n", cut.Pieces, cut.getDistanceBetweenCenters(), newPercentage*100)
+		if newPercentage > percentage {
+			percentage = newPercentage
+			bestCut = cut
+		}
+
+	}
+	return bestCut
+
 }
