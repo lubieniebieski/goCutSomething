@@ -1,4 +1,4 @@
-package main
+package cut_dimensions
 
 import (
 	"fmt"
@@ -64,7 +64,7 @@ func TestPossibleCutDimensions(t *testing.T) {
 
 func assertCuts(t *testing.T, materialWidth int, diameter int, expected []CutDimensions) {
 	t.Helper()
-	got := possibleCutDimensions(materialWidth, diameter, 10)
+	got := PossibleCutDimensions(materialWidth, diameter, 10)
 	for _, e := range expected {
 		if slices.Contains(got, e) == false {
 			t.Errorf("it should contain %v but it didn't", e)
